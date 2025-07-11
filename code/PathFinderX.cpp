@@ -8,12 +8,15 @@ const int N = 10; // Grid size
 vector<vector<int>> grid(N, vector<int>(N, 0)); // 0=open, 1=obstacle, 2=path
 
 pair<int, int> source, destination;
+vector<pair<int, int>> deliveries;
+int batteryLimit = 30; // Default battery life
+int totalStepsUsed = 0;
 
-// Directions: up, down, left, right
+// Direction vectors: up, down, left, right
 int dx[] = {-1, 1, 0, 0};
 int dy[] = {0, 0, -1, 1};
 
-// Function to print grid with markings
+// Print the grid
 void printGrid() {
     cout << "\n🗺️ City Grid Layout:\n";
     for (int i = 0; i < N; i++) {
@@ -33,51 +36,38 @@ void printGrid() {
     }
 }
 
-// Check if a cell is valid to move
+// Check if a move is valid
 bool isValid(int x, int y, vector<vector<bool>>& visited) {
     return (x >= 0 && x < N && y >= 0 && y < N &&
             grid[x][y] == 0 && !visited[x][y]);
 }
 
-// BFS pathfinding logic
-bool bfsPath() {
+// BFS function: returns steps and path between two points
+int bfsPath(pair<int, int> start, pair<int, int> end, vector<pair<int, int>>& pathOut) {
     vector<vector<bool>> visited(N, vector<bool>(N, false));
     vector<vector<pair<int, int>>> parent(N, vector<pair<int, int>>(N, {-1, -1}));
     queue<pair<int, int>> q;
 
-    q.push(source);
-    visited[source.first][source.second] = true;
+    q.push(start);
+    visited[start.first][start.second] = true;
 
     while (!q.empty()) {
         auto [x, y] = q.front();
         q.pop();
 
-        if (make_pair(x, y) == destination) {
+        if (make_pair(x, y) == end) {
             vector<pair<int, int>> path;
-            pair<int, int> curr = destination;
+            pair<int, int> curr = end;
 
-            while (curr != source) {
+            while (curr != start) {
                 path.push_back(curr);
                 curr = parent[curr.first][curr.second];
             }
-            path.push_back(source);
+            path.push_back(start);
             reverse(path.begin(), path.end());
 
-            // Mark the path on the grid
-            for (int i = 1; i < path.size() - 1; i++) {
-                int r = path[i].first;
-                int c = path[i].second;
-                grid[r][c] = 2;
-            }
-
-            // Print the path steps
-            cout << "\n✅ Shortest Path Found (BFS):\n";
-            for (auto cell : path) {
-                cout << "(" << cell.first << "," << cell.second << ") ";
-            }
-            cout << "\n📏 Total Steps: " << path.size() - 1 << endl;
-
-            return true;
+            pathOut = path;
+            return path.size() - 1; // total steps
         }
 
         for (int i = 0; i < 4; i++) {
@@ -92,8 +82,7 @@ bool bfsPath() {
         }
     }
 
-    cout << "\n❌ No valid path from Source to Destination.\n";
-    return false;
+    return -1; // no path
 }
 
 int main() {
@@ -101,7 +90,7 @@ int main() {
     cout << "🚁 Welcome to PathFinderX – Drone Delivery System 🚁\n";
     cout << "Grid Size: " << N << "x" << N << endl;
 
-    // Get obstacle input
+    // Input obstacles
     cout << "\nEnter number of obstacles: ";
     cin >> obs;
 
@@ -115,16 +104,76 @@ int main() {
             cout << "⚠️ Invalid coordinates! Ignored.\n";
     }
 
-    // Source & destination input
+    // Input source and destination
     cout << "Enter source coordinates (row col): ";
     cin >> source.first >> source.second;
 
     cout << "Enter destination coordinates (row col): ";
     cin >> destination.first >> destination.second;
 
-    printGrid();
-    bfsPath();
-    printGrid(); // Show grid with path
+    // Input delivery stops
+    int deliveryCount;
+    cout << "\nEnter number of delivery stops (0 if none): ";
+    cin >> deliveryCount;
 
+    for (int i = 0; i < deliveryCount; i++) {
+        int x, y;
+        cout << "Enter delivery stop " << i + 1 << " (row col): ";
+        cin >> x >> y;
+        deliveries.push_back({x, y});
+    }
+
+    // Battery input
+    cout << "Enter drone battery limit (steps allowed): ";
+    cin >> batteryLimit;
+
+    printGrid();
+
+    // Execute delivery path segment by segment
+    vector<pair<int, int>> fullPath;
+    pair<int, int> current = source;
+    bool success = true;
+
+    vector<pair<int, int>> allStops = deliveries;
+    allStops.push_back(destination);
+
+    for (auto stop : allStops) {
+        vector<pair<int, int>> segmentPath;
+        int steps = bfsPath(current, stop, segmentPath);
+
+        if (steps == -1) {
+            cout << "\n❌ No path from (" << current.first << "," << current.second
+                 << ") to (" << stop.first << "," << stop.second << ")\n";
+            success = false;
+            break;
+        }
+
+        totalStepsUsed += steps;
+
+        // Battery check
+        if (totalStepsUsed > batteryLimit) {
+            cout << "\n🔋 Battery limit exceeded! Mission failed.\n";
+            success = false;
+            break;
+        }
+
+        // Mark path (except source/dest)
+        for (int i = 1; i < segmentPath.size() - 1; i++) {
+            grid[segmentPath[i].first][segmentPath[i].second] = 2;
+        }
+
+        fullPath.insert(fullPath.end(), segmentPath.begin(), segmentPath.end() - 1);
+        current = stop;
+    }
+
+    if (success) {
+        fullPath.push_back(destination);
+        cout << "\n✅ Final Drone Delivery Path:\n";
+        for (auto p : fullPath)
+            cout << "(" << p.first << "," << p.second << ") ";
+        cout << "\n📏 Total Steps Used: " << totalStepsUsed << " / " << batteryLimit << endl;
+    }
+
+    printGrid();
     return 0;
 }
