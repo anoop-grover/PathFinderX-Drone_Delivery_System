@@ -18,13 +18,16 @@ int dy[] = {0, 0, -1, 1};
 
 // Print the grid
 void printGrid() {
-    cout << "\n🗺️ City Grid Layout:\n";
+    cout << "\n\U0001F5FA\uFE0F City Grid Layout:\n";
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            if (make_pair(i, j) == source)
+            pair<int, int> current = {i, j};
+            if (current == source)
                 cout << "S ";
-            else if (make_pair(i, j) == destination)
+            else if (current == destination)
                 cout << "D ";
+            else if (find(deliveries.begin(), deliveries.end(), current) != deliveries.end())
+                cout << "P ";
             else if (grid[i][j] == 1)
                 cout << "X ";
             else if (grid[i][j] == 2)
@@ -87,7 +90,7 @@ int bfsPath(pair<int, int> start, pair<int, int> end, vector<pair<int, int>>& pa
 
 int main() {
     int obs;
-    cout << "🚁 Welcome to PathFinderX – Drone Delivery System 🚁\n";
+    cout << "\U0001F681 Welcome to PathFinderX – Drone Delivery System \U0001F681\n";
     cout << "Grid Size: " << N << "x" << N << endl;
 
     // Input obstacles
@@ -101,7 +104,7 @@ int main() {
         if (x >= 0 && x < N && y >= 0 && y < N)
             grid[x][y] = 1;
         else
-            cout << "⚠️ Invalid coordinates! Ignored.\n";
+            cout << "\u26A0\uFE0F Invalid coordinates! Ignored.\n";
     }
 
     // Input source and destination
