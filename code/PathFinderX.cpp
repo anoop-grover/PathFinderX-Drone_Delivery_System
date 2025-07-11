@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <queue>
+#include <algorithm>
 using namespace std;
 
 const int N = 10; // Grid size (10x10)
@@ -7,9 +9,9 @@ vector<vector<int>> grid(N, vector<int>(N, 0)); // 0=open, 1=obstacle
 
 pair<int, int> source, destination;
 
-// Function to print the grid with S, D, and obstacles
+// Function to print the grid
 void printGrid() {
-    cout << "\nCity Grid Layout:\n";
+    cout << "\n🗺️ City Grid Layout:\n";
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             if (make_pair(i, j) == source)
@@ -25,12 +27,72 @@ void printGrid() {
     }
 }
 
+// Direction vectors (up, down, left, right)
+int dx[] = {-1, 1, 0, 0};
+int dy[] = {0, 0, -1, 1};
+
+// Check if the next cell is valid
+bool isValid(int x, int y, vector<vector<bool>>& visited) {
+    return (x >= 0 && x < N && y >= 0 && y < N &&
+            grid[x][y] == 0 && !visited[x][y]);
+}
+
+// Perform BFS to find the shortest path
+bool bfsPath() {
+    vector<vector<bool>> visited(N, vector<bool>(N, false));
+    vector<vector<pair<int, int>>> parent(N, vector<pair<int, int>>(N, {-1, -1}));
+    queue<pair<int, int>> q;
+
+    q.push(source);
+    visited[source.first][source.second] = true;
+
+    while (!q.empty()) {
+        auto [x, y] = q.front();
+        q.pop();
+
+        if (make_pair(x, y) == destination) {
+            vector<pair<int, int>> path;
+            pair<int, int> curr = destination;
+
+            while (curr != source) {
+                path.push_back(curr);
+                curr = parent[curr.first][curr.second];
+            }
+            path.push_back(source);
+            reverse(path.begin(), path.end());
+
+            // Print the path
+            cout << "\n✅ Shortest Path Found (BFS):\n";
+            for (auto cell : path) {
+                cout << "(" << cell.first << "," << cell.second << ") ";
+            }
+            cout << "\n📏 Total Steps: " << path.size() - 1 << endl;
+            return true;
+        }
+
+        // Explore all 4 directions
+        for (int i = 0; i < 4; i++) {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+
+            if (isValid(nx, ny, visited)) {
+                visited[nx][ny] = true;
+                parent[nx][ny] = {x, y};
+                q.push({nx, ny});
+            }
+        }
+    }
+
+    cout << "\n❌ No valid path from Source to Destination.\n";
+    return false;
+}
+
 int main() {
     int obs;
     cout << "🚁 Welcome to PathFinderX – Drone Delivery System 🚁\n";
     cout << "Grid Size: " << N << "x" << N << endl;
 
-    // Obstacle Input
+    // Obstacle input
     cout << "\nEnter number of obstacles: ";
     cin >> obs;
 
@@ -44,16 +106,16 @@ int main() {
             cout << "⚠️ Invalid coordinates! Ignored.\n";
     }
 
-    // Source Input
+    // Source and destination input
     cout << "Enter source coordinates (row col): ";
     cin >> source.first >> source.second;
 
-    // Destination Input
     cout << "Enter destination coordinates (row col): ";
     cin >> destination.first >> destination.second;
 
-    // Print Final Grid
+    // Show grid and run pathfinder
     printGrid();
+    bfsPath();
 
     return 0;
 }
