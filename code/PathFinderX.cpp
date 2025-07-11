@@ -4,40 +4,42 @@
 #include <algorithm>
 using namespace std;
 
-const int N = 10; // Grid size (10x10)
-vector<vector<int>> grid(N, vector<int>(N, 0)); // 0=open, 1=obstacle
+const int N = 10; // Grid size
+vector<vector<int>> grid(N, vector<int>(N, 0)); // 0=open, 1=obstacle, 2=path
 
 pair<int, int> source, destination;
 
-// Function to print the grid
+// Directions: up, down, left, right
+int dx[] = {-1, 1, 0, 0};
+int dy[] = {0, 0, -1, 1};
+
+// Function to print grid with markings
 void printGrid() {
     cout << "\n🗺️ City Grid Layout:\n";
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             if (make_pair(i, j) == source)
-                cout << "S "; // Source
+                cout << "S ";
             else if (make_pair(i, j) == destination)
-                cout << "D "; // Destination
+                cout << "D ";
             else if (grid[i][j] == 1)
-                cout << "X "; // Obstacle
+                cout << "X ";
+            else if (grid[i][j] == 2)
+                cout << "* ";
             else
-                cout << ". "; // Open space
+                cout << ". ";
         }
         cout << endl;
     }
 }
 
-// Direction vectors (up, down, left, right)
-int dx[] = {-1, 1, 0, 0};
-int dy[] = {0, 0, -1, 1};
-
-// Check if the next cell is valid
+// Check if a cell is valid to move
 bool isValid(int x, int y, vector<vector<bool>>& visited) {
     return (x >= 0 && x < N && y >= 0 && y < N &&
             grid[x][y] == 0 && !visited[x][y]);
 }
 
-// Perform BFS to find the shortest path
+// BFS pathfinding logic
 bool bfsPath() {
     vector<vector<bool>> visited(N, vector<bool>(N, false));
     vector<vector<pair<int, int>>> parent(N, vector<pair<int, int>>(N, {-1, -1}));
@@ -61,16 +63,23 @@ bool bfsPath() {
             path.push_back(source);
             reverse(path.begin(), path.end());
 
-            // Print the path
+            // Mark the path on the grid
+            for (int i = 1; i < path.size() - 1; i++) {
+                int r = path[i].first;
+                int c = path[i].second;
+                grid[r][c] = 2;
+            }
+
+            // Print the path steps
             cout << "\n✅ Shortest Path Found (BFS):\n";
             for (auto cell : path) {
                 cout << "(" << cell.first << "," << cell.second << ") ";
             }
             cout << "\n📏 Total Steps: " << path.size() - 1 << endl;
+
             return true;
         }
 
-        // Explore all 4 directions
         for (int i = 0; i < 4; i++) {
             int nx = x + dx[i];
             int ny = y + dy[i];
@@ -92,7 +101,7 @@ int main() {
     cout << "🚁 Welcome to PathFinderX – Drone Delivery System 🚁\n";
     cout << "Grid Size: " << N << "x" << N << endl;
 
-    // Obstacle input
+    // Get obstacle input
     cout << "\nEnter number of obstacles: ";
     cin >> obs;
 
@@ -106,16 +115,16 @@ int main() {
             cout << "⚠️ Invalid coordinates! Ignored.\n";
     }
 
-    // Source and destination input
+    // Source & destination input
     cout << "Enter source coordinates (row col): ";
     cin >> source.first >> source.second;
 
     cout << "Enter destination coordinates (row col): ";
     cin >> destination.first >> destination.second;
 
-    // Show grid and run pathfinder
     printGrid();
     bfsPath();
+    printGrid(); // Show grid with path
 
     return 0;
 }
