@@ -18,7 +18,7 @@ Whether you're planning a smart city delivery network or just mastering DSA, thi
 - 📦 Multiple delivery stops
 - 🧠 Shortest path finding using **BFS**
 - 🔋 Battery constraint handling
-- 📊 Visual grid output (`S`, `D`, `*`, `X`)
+- 📊 Visual grid output (`S`, `D`, `P`, `*`, `X`)
 - 🌐 HTML-based animated visualizer (for demos)
 
 ---
